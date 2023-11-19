@@ -340,7 +340,7 @@ namespace Opm {
         this->process(length_depth_type, depth_top, length_top);
 
         const auto& well_name = record1.getItem("WELL").getTrimmedString(0);
-        this->checkAndFixLengthsVsDepths(wname);
+        this->checkAndFixLengthsVsDepths(well_name);
     }
 
     const Segment& WellSegments::getFromSegmentNumber(const int segment_number) const {
@@ -360,7 +360,7 @@ namespace Opm {
     //   2. Try to change position of segment node to make length change = depth change
     //      - If this pushes the segment node beyond any inlet segment, change the depth instead
     //  (Depends on processOrder() ordering)
-    void WellSegments::checkAndFixLengthVsDepths(const std::string& well_name) {
+    void WellSegments::checkAndFixLengthsVsDepths(const std::string& well_name) {
         for (std::size_t i_index = 1; i_index < size(); ++i_index) {
             const int outlet_segment = m_segments[i_index].outletSegment();
             const int outlet_index = segmentNumberToIndex(outlet_segment);
@@ -375,11 +375,11 @@ namespace Opm {
                 const std::string msg = fmt::format("Well {} segment {}: Depth change larger than segment length. \n   Will attempt to fix by adjusting segment node position, or node depth if this fails, but please check and verify input carefully.", well_name, m_segments[i_index].segmentNumber());
                 OpmLog::warning(msg);
 
-                double new_length = output_length + delta_depth;
+                double new_length = outlet_length + delta_depth;
                 double new_depth = cur_depth;
                 const auto& inlet_segments = m_segments[i_index].inletSegments();
-                for (auto inlet_segment : inlet_segments) {
-                    inlet_index = segmentNumberToIndex[inlet_segment];
+                for (const int inlet_segment : inlet_segments) {
+                    const int inlet_index = segmentNumberToIndex(inlet_segment);
                     if (new_length >= m_segments[inlet_index].totalLength()) {
                         new_length = cur_length;
                         new_depth = outlet_depth + delta_length;

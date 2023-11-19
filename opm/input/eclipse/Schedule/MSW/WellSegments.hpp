@@ -124,7 +124,7 @@ namespace Opm {
         void processABS();
         void processINC(double depth_top, double length_top);
         void process(LengthDepth length_depth, double depth_top, double length_top);
-        void checkAndFixLengthVsDepths(const std::string& well_name);
+        void checkAndFixLengthsVsDepths(const std::string& well_name);
         void addSegment(const Segment& new_segment);
         void addSegment(const int segment_number,
                         const int branch,
