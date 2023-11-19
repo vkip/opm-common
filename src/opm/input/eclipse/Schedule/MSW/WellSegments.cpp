@@ -28,6 +28,8 @@
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Deck/DeckRecord.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -336,6 +338,9 @@ namespace Opm {
         }
 
         this->process(length_depth_type, depth_top, length_top);
+
+        const auto& well_name = record1.getItem("WELL").getTrimmedString(0);
+        this->checkAndFixLengthsVsDepths(wname);
     }
 
     const Segment& WellSegments::getFromSegmentNumber(const int segment_number) const {
@@ -347,6 +352,43 @@ namespace Opm {
             };
         }
         return m_segments[segment_index];
+    }
+
+    // Check if segment length change is >= segment depth change
+    // If not:
+    //   1. Issue warning
+    //   2. Try to change position of segment node to make length change = depth change
+    //      - If this pushes the segment node beyond any inlet segment, change the depth instead
+    //  (Depends on processOrder() ordering)
+    void WellSegments::checkAndFixLengthVsDepths(const std::string& well_name) {
+        for (std::size_t i_index = 1; i_index < size(); ++i_index) {
+            const int outlet_segment = m_segments[i_index].outletSegment();
+            const int outlet_index = segmentNumberToIndex(outlet_segment);
+
+            const double outlet_depth = m_segments[outlet_index].depth();
+            const double outlet_length = m_segments[outlet_index].totalLength();
+            const double cur_depth = m_segments[i_index].depth();
+            const double cur_length = m_segments[i_index].totalLength();
+            const double delta_depth = std::abs(cur_depth - outlet_depth);
+            const double delta_length = cur_length - outlet_length;
+            if (delta_depth > delta_length) {
+                const std::string msg = fmt::format("Well {} segment {}: Depth change larger than segment length. \n   Will attempt to fix by adjusting segment node position, or node depth if this fails, but please check and verify input carefully.", well_name, m_segments[i_index].segmentNumber());
+                OpmLog::warning(msg);
+
+                double new_length = output_length + delta_depth;
+                double new_depth = cur_depth;
+                const auto& inlet_segments = m_segments[i_index].inletSegments();
+                for (auto inlet_segment : inlet_segments) {
+                    inlet_index = segmentNumberToIndex[inlet_segment];
+                    if (new_length >= m_segments[inlet_index].totalLength()) {
+                        new_length = cur_length;
+                        new_depth = outlet_depth + delta_length;
+                        break;
+                    }
+                }
+                this->addSegment(Segment{this->m_segments[i_index], new_depth, new_length});
+            }
+        }
     }
 
     void WellSegments::process(const LengthDepth length_depth,
