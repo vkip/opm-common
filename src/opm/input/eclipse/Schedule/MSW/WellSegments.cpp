@@ -43,6 +43,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <functional>
 
 #ifdef _WIN32
 #define _USE_MATH_DEFINES
@@ -358,35 +359,54 @@ namespace Opm {
     // If not:
     //   1. Issue warning
     //   2. Try to change position of segment node to make length change = depth change
-    //      - If this pushes the segment node beyond any inlet segment, change the depth instead
-    //  (Depends on processOrder() ordering)
+    //      - If this pushes the segment node beyond any inlet segment, also push inlet node (and so on, recursively further down, until a segment can 'contain' the change)
+    //  (Depends on processOrder(), i.e., well head to toe, ordering)
     void WellSegments::checkAndFixLengthsVsDepths(const std::string& well_name) {
+
+        // Utility function to propagate any depth change towards the toe
+        auto push_down = [this](auto self, const std::vector<int>& inlets, const double outlet_md_, const double delta_md_) -> std::string {
+            std::string warning_txt;
+            for (const int inlet_segment : inlets) {
+                const int inlet_index = this->segmentNumberToIndex(inlet_segment);
+                const double cur_md_ = this->m_segments[inlet_index].totalLength();
+                if (outlet_md_ >= cur_md_) {
+                    const double new_md_ = cur_md_ + delta_md_;
+                    warning_txt += fmt::format("\n      causing push of segment node {} by {} m, to new position {} mD. No volume change.", inlet_segment, delta_md_, new_md_);
+                    this->addSegment(Segment{this->m_segments[inlet_index], this->m_segments[inlet_index].depth(), new_md_});
+                    warning_txt += self(self, this->m_segments[inlet_index].inletSegments(), new_md_, delta_md_);
+                } else {
+                    const double volume_scale_ = (cur_md_ - outlet_md_) / (cur_md_ - (outlet_md_ - delta_md_));
+                    warning_txt += fmt::format("\n      causing shortening of segment {}, volume scaled accordingly. ", inlet_segment);
+                    this->addSegment(Segment{this->m_segments[inlet_index], this->m_segments[inlet_index].volume()*volume_scale_});
+                }
+            }
+            return warning_txt;
+        };
+
         for (std::size_t i_index = 1; i_index < size(); ++i_index) {
             const int outlet_segment = m_segments[i_index].outletSegment();
             const int outlet_index = segmentNumberToIndex(outlet_segment);
 
             const double outlet_depth = m_segments[outlet_index].depth();
-            const double outlet_length = m_segments[outlet_index].totalLength();
-            const double cur_depth = m_segments[i_index].depth();
-            const double cur_length = m_segments[i_index].totalLength();
-            const double delta_depth = std::abs(cur_depth - outlet_depth);
-            const double delta_length = cur_length - outlet_length;
-            if (delta_depth > delta_length) {
-                const std::string msg = fmt::format("Well {} segment {}: Depth change larger than segment length. \n   Will attempt to fix by adjusting segment node position, or node depth if this fails, but please check and verify input carefully.", well_name, m_segments[i_index].segmentNumber());
-                OpmLog::warning(msg);
+            const double outlet_md = m_segments[outlet_index].totalLength();
+            const double orig_depth = m_segments[i_index].depth();
+            const double orig_md = m_segments[i_index].totalLength();
+            const double orig_volume = m_segments[i_index].volume();
+            const double delta_depth = std::abs(orig_depth - outlet_depth);
+            const double segment_length = orig_md - outlet_md;
+            if (delta_depth > segment_length) {
+                std::string warning_text = fmt::format("\n  Well {} segment {}: Depth change larger than segment length.", well_name, m_segments[i_index].segmentNumber());
+                warning_text += "\n  Will attempt to fix by adjusting segment node position(s), but please check and verify input carefully.";
 
-                double new_length = outlet_length + delta_depth;
-                double new_depth = cur_depth;
-                const auto& inlet_segments = m_segments[i_index].inletSegments();
-                for (const int inlet_segment : inlet_segments) {
-                    const int inlet_index = segmentNumberToIndex(inlet_segment);
-                    if (new_length >= m_segments[inlet_index].totalLength()) {
-                        new_length = cur_length;
-                        new_depth = outlet_depth + delta_length;
-                        break;
-                    }
-                }
-                this->addSegment(Segment{this->m_segments[i_index], new_depth, new_length});
+                const double new_md = outlet_md + delta_depth;
+                const double delta_md = new_md - orig_md;
+                const double volume_scale = (segment_length + delta_md) / segment_length;
+                warning_text += fmt::format("\n    Pushing segment node {} m down, to new position {} mD. \n    (Will also scale volume by new/original segment lengths.)", delta_md, new_md);
+
+                assert(segment_length > 0.0);
+                this->addSegment(Segment{this->m_segments[i_index], orig_depth, new_md, orig_volume*volume_scale});
+                warning_text += push_down(push_down, m_segments[i_index].inletSegments(), new_md, delta_md);
+                OpmLog::warning(warning_text);
             }
         }
     }
