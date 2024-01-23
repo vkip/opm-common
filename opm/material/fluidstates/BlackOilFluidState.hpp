@@ -510,7 +510,7 @@ public:
      * exception!
      */
     Scalar internalEnergy(unsigned phaseIdx) const
-    { return (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx)] - pressure(phaseIdx)/density(phaseIdx); }
+    { return (*enthalpy_)[canonicalToStoragePhaseIndex_(phaseIdx)] ; } //- pressure(phaseIdx)/density(phaseIdx); }
 
     //////
     // slow methods

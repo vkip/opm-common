@@ -215,7 +215,7 @@ public:
 
             Evaluation enthalpy = Cp * (temperature - Tref) + enthalpyPres;
 
-            return enthalpy - pressure/density;
+            return enthalpy ; // - pressure/density;
         }
     }
 
