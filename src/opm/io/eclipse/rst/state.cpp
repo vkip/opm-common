@@ -414,9 +414,23 @@ RstState RstState::load(std::shared_ptr<EclIO::RestartFileView> rstView,
     {
         const auto& zgrp = rstView->getKeyword<std::string>("ZGRP");
         const auto& igrp = rstView->getKeyword<int>("IGRP");
-        const auto& sgrp = rstView->getKeyword<float>("SGRP");
+        // SGRP may have float or double type
+        const std::vector<float>* sgrp_p = nullptr;
+        if (rstView->hasKeyword<float>("SGRP")) {
+            sgrp_p = &(rstView->getKeyword<float>("SGRP"));
+        } else {
+            const auto& sgrp_d = rstView->getKeyword<double>("SGRP");
+            sgrp_p = new std::vector<float>(sgrp_d.begin(), sgrp_d.end());
+        }
+
+        //const auto& sgrp = rstView->getKeyword<float>("SGRP");
+        const auto& sgrp = *(sgrp_p);
+
         const auto& xgrp = rstView->getKeyword<double>("XGRP");
         state.add_groups(zgrp, igrp, sgrp, xgrp);
+
+        // Delete float vector if we had to make a copy of a double vector
+        if (sgrp_p != nullptr) delete sgrp_p;
     }
 
     if (state.header.num_wells > 0) {

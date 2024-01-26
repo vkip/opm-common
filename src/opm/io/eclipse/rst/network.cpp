@@ -207,6 +207,12 @@ namespace {
         const auto branchData = BranchVectors { rstView->intehead(), rstView };
         const auto numBranches = branchData.numActiveBranches();
 
+        // Guard against erroneous values NOACTBR in INTEHEAD:
+        // Do not try to create branches if there is no IBRAN array
+        if (! rstView->hasKeyword<int>("IBRAN")) {
+            return branches;
+        }
+
         branches.reserve(numBranches);
 
         for (auto branchID = 0*numBranches; branchID < numBranches; ++branchID) {
