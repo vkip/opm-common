@@ -40,6 +40,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         setApproach(GasPvtApproach::H2Gas);
     else if (enableThermal && eclState.getSimulationConfig().isThermal())
         setApproach(GasPvtApproach::ThermalGas);
+    else if (enableThermal && eclState.getSimulationConfig().isTemperature())
+        setApproach(GasPvtApproach::TemperatureGas);
     else if (!eclState.getTableManager().getPvtgwTables().empty() &&
             !eclState.getTableManager().getPvtgTables().empty())
         setApproach(GasPvtApproach::WetHumidGas);

@@ -63,6 +63,11 @@ class Schedule;
         codeToCall;                                                               \
         break;                                                                    \
     }                                                                             \
+    case OilPvtApproach::TemperatureOil: {                                        \
+        auto& pvtImpl = getRealPvt<OilPvtApproach::TemperatureOil>();             \
+        codeToCall;                                                               \
+        break;                                                                    \
+    }                                                                             \
     case OilPvtApproach::BrineCo2: {                                              \
         auto& pvtImpl = getRealPvt<OilPvtApproach::BrineCo2>();                   \
         codeToCall;                                                               \
@@ -83,6 +88,7 @@ enum class OilPvtApproach {
     DeadOil,
     ConstantCompressibilityOil,
     ThermalOil,
+    TemperatureOil,
     BrineCo2,
     BrineH2
 };
@@ -99,7 +105,7 @@ enum class OilPvtApproach {
  * Note that, since the application for this class is the black-oil fluid system, the API
  * exposed by this class is pretty specific to the black-oil model.
  */
-template <class Scalar, bool enableThermal = true>
+template <class Scalar, bool enableThermal = true >
 class OilPvtMultiplexer
 {
 public:
@@ -136,6 +142,10 @@ public:
         }
         case OilPvtApproach::ThermalOil: {
             delete &getRealPvt<OilPvtApproach::ThermalOil>();
+            break;
+        }
+        case OilPvtApproach::TemperatureOil: {
+            delete &getRealPvt<OilPvtApproach::TemperatureOil>();
             break;
         }
         case OilPvtApproach::BrineCo2: {
@@ -292,6 +302,10 @@ public:
             realOilPvt_ = new OilPvtThermal<Scalar>;
             break;
 
+        case OilPvtApproach::TemperatureOil:
+            realOilPvt_ = new OilPvtThermal<Scalar, /*onlyInternalEnergy*/ true>;
+            break;
+
         case OilPvtApproach::BrineCo2:
             realOilPvt_ = new BrineCo2Pvt<Scalar>;
             break;
@@ -373,6 +387,20 @@ public:
     }
 
     template <OilPvtApproach approachV>
+    typename std::enable_if<approachV == OilPvtApproach::TemperatureOil, OilPvtThermal<Scalar, /*onlyInternalEnergy*/ true> >::type& getRealPvt()
+    {
+        assert(approach() == approachV);
+        return *static_cast<OilPvtThermal<Scalar, /*onlyInternalEnergy*/ true>* >(realOilPvt_);
+    }
+
+    template <OilPvtApproach approachV>
+    typename std::enable_if<approachV == OilPvtApproach::TemperatureOil, const OilPvtThermal<Scalar, /*onlyInternalEnergy*/ true> >::type& getRealPvt() const
+    {
+        assert(approach() == approachV);
+        return *static_cast<const OilPvtThermal<Scalar, /*onlyInternalEnergy*/ true>* >(realOilPvt_);
+    }
+
+    template <OilPvtApproach approachV>
     typename std::enable_if<approachV == OilPvtApproach::BrineCo2, BrineCo2Pvt<Scalar> >::type& getRealPvt()
     {
         assert(approach() == approachV);
@@ -417,6 +445,9 @@ public:
             break;
         case OilPvtApproach::ThermalOil:
             realOilPvt_ = new OilPvtThermal<Scalar>(*static_cast<const OilPvtThermal<Scalar>*>(data.realOilPvt_));
+            break;
+        case OilPvtApproach::TemperatureOil:
+            realOilPvt_ = new OilPvtThermal<Scalar, /*onlyInternalEnergy*/ true>(*static_cast<const OilPvtThermal<Scalar, /*onlyInternalEnergy*/ true>*>(data.realOilPvt_));
             break;
         case OilPvtApproach::BrineCo2:
             realOilPvt_ = new BrineCo2Pvt<Scalar>(*static_cast<const BrineCo2Pvt<Scalar>*>(data.realOilPvt_));

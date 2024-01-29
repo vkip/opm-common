@@ -45,7 +45,7 @@ class WaterPvtMultiplexer;
  * Note that this _only_ implements the temperature part, i.e., it requires the
  * isothermal properties as input.
  */
-template <class Scalar, bool enableBrine>
+template <class Scalar, bool enableBrine, bool onlyInternalEnergy = false >
 class WaterPvtThermal
 {
 public:
@@ -219,9 +219,9 @@ public:
                   throw std::runtime_error("Requested Joule-thomson calculation but thermal water density (WATDENT) is not provided");
             }
 
-            Evaluation enthalpy = Cp * (temperature - Tref) + enthalpyPres;
+            Evaluation enthalpy = Cp * (temperature - Tref) + onlyInternalEnergy * enthalpyPres;
 
-            return enthalpy - pressure/density;
+            return enthalpy - onlyInternalEnergy * (pressure/density);
         }
     }
 
@@ -386,7 +386,7 @@ public:
     { return watJTC_; }
 
 
-    bool operator==(const WaterPvtThermal<Scalar, enableBrine>& data) const
+    bool operator==(const WaterPvtThermal<Scalar, enableBrine, onlyInternalEnergy>& data) const
     {
         if (isothermalPvt_ && !data.isothermalPvt_)
             return false;
@@ -413,7 +413,7 @@ public:
                this->enableInternalEnergy() == data.enableInternalEnergy();
     }
 
-    WaterPvtThermal<Scalar, enableBrine>& operator=(const WaterPvtThermal<Scalar, enableBrine>& data)
+    WaterPvtThermal<Scalar, enableBrine, onlyInternalEnergy>& operator=(const WaterPvtThermal<Scalar, enableBrine, onlyInternalEnergy>& data)
     {
         if (data.isothermalPvt_)
             isothermalPvt_ = new IsothermalPvt(*data.isothermalPvt_);

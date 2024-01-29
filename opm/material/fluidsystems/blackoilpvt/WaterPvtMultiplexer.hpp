@@ -50,6 +50,11 @@
         codeToCall;                                                     \
         break;                                                          \
     }                                                                    \
+    case WaterPvtApproach::TemperatureWater: {                           \
+        auto& pvtImpl = getRealPvt<WaterPvtApproach::TemperatureWater>();   \
+        codeToCall;                                                     \
+        break;                                                          \
+    }                                                                    \
     case WaterPvtApproach::BrineCo2: {                                              \
         auto& pvtImpl = getRealPvt<WaterPvtApproach::BrineCo2>();                   \
         codeToCall;                                                                  \
@@ -71,6 +76,7 @@ enum class WaterPvtApproach {
     ConstantCompressibilityBrine,
     ConstantCompressibilityWater,
     ThermalWater,
+    TemperatureWater,
     BrineCo2,
     BrineH2
 };
@@ -84,7 +90,7 @@ class Schedule;
  * \brief This class represents the Pressure-Volume-Temperature relations of the water
  *        phase in the black-oil model.
  */
-template <class Scalar, bool enableThermal = true, bool enableBrine = true>
+template <class Scalar, bool enableThermal = true , bool enableBrine = true >
 class WaterPvtMultiplexer
 {
 public:
@@ -117,6 +123,10 @@ public:
         }
         case WaterPvtApproach::ThermalWater: {
             delete &getRealPvt<WaterPvtApproach::ThermalWater>();
+            break;
+        }
+        case WaterPvtApproach::TemperatureWater: {
+            delete &getRealPvt<WaterPvtApproach::TemperatureWater>();
             break;
         }
         case WaterPvtApproach::BrineCo2: {
@@ -281,6 +291,10 @@ public:
             realWaterPvt_ = new WaterPvtThermal<Scalar, enableBrine>;
             break;
 
+        case WaterPvtApproach::TemperatureWater:
+            realWaterPvt_ = new WaterPvtThermal<Scalar, enableBrine, /*onlyInternalEnergy*/ true>;
+            break;
+
         case WaterPvtApproach::BrineCo2:
             realWaterPvt_ = new BrineCo2Pvt<Scalar>;
             break;
@@ -348,6 +362,20 @@ public:
     }
 
     template <WaterPvtApproach approachV>
+    typename std::enable_if<approachV == WaterPvtApproach::TemperatureWater, WaterPvtThermal<Scalar, enableBrine, /*onlyInternalEnergy*/ true> >::type& getRealPvt()
+    {
+        assert(approach() == approachV);
+        return *static_cast<WaterPvtThermal<Scalar, enableBrine, /*onlyInternalEnergy*/ true>* >(realWaterPvt_);
+    }
+
+    template <WaterPvtApproach approachV>
+    typename std::enable_if<approachV == WaterPvtApproach::TemperatureWater, const WaterPvtThermal<Scalar, enableBrine, /*onlyInternalEnergy*/ true> >::type& getRealPvt() const
+    {
+        assert(approach() == approachV);
+        return *static_cast<WaterPvtThermal<Scalar, enableBrine, /*onlyInternalEnergy*/ true>* >(realWaterPvt_);
+    }
+
+    template <WaterPvtApproach approachV>
     typename std::enable_if<approachV == WaterPvtApproach::BrineCo2, BrineCo2Pvt<Scalar> >::type& getRealPvt()
     {
         assert(approach() == approachV);
@@ -389,6 +417,9 @@ public:
             break;
         case WaterPvtApproach::ThermalWater:
             realWaterPvt_ = new WaterPvtThermal<Scalar, enableBrine>(*static_cast<const WaterPvtThermal<Scalar, enableBrine>*>(data.realWaterPvt_));
+            break;
+        case WaterPvtApproach::TemperatureWater:
+            realWaterPvt_ = new WaterPvtThermal<Scalar, enableBrine, /*onlyInternalEnergy*/ true>(*static_cast<const WaterPvtThermal<Scalar, enableBrine, /*onlyInternalEnergy*/ true>*>(data.realWaterPvt_));
             break;
         case WaterPvtApproach::BrineCo2:
             realWaterPvt_ = new BrineCo2Pvt<Scalar>(*static_cast<const BrineCo2Pvt<Scalar>*>(data.realWaterPvt_));

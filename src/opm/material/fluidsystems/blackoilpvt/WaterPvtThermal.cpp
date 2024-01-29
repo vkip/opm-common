@@ -36,8 +36,8 @@
 
 namespace Opm {
 
-template<class Scalar, bool enableBrine>
-void WaterPvtThermal<Scalar,enableBrine>::
+template<class Scalar, bool enableBrine, bool onlyInternalEnergy>
+void WaterPvtThermal<Scalar,enableBrine,onlyInternalEnergy>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
 {
     //////
@@ -178,9 +178,14 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     }
 }
 
-template class WaterPvtThermal<double,false>;
-template class WaterPvtThermal<double,true>;
-template class WaterPvtThermal<float,false>;
-template class WaterPvtThermal<float,true>;
+template class WaterPvtThermal<double,false,false>;
+template class WaterPvtThermal<double,true,false>;
+template class WaterPvtThermal<float,false,false>;
+template class WaterPvtThermal<float,true,false>;
+template class WaterPvtThermal<double,false,true>;
+template class WaterPvtThermal<double,true,true>;
+template class WaterPvtThermal<float,false,true>;
+template class WaterPvtThermal<float,true,true>;
+
 
 } // namespace Opm

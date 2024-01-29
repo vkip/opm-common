@@ -45,7 +45,7 @@ class OilPvtMultiplexer;
  * Note that this _only_ implements the temperature part, i.e., it requires the
  * isothermal properties as input.
  */
-template <class Scalar>
+template <class Scalar, bool onlyInternalEnergy = false >
 class OilPvtThermal
 {
 public:
@@ -212,9 +212,9 @@ public:
                   throw std::runtime_error("Requested Joule-thomson calculation but thermal oil density (OILDENT) is not provided");
             }
 
-            Evaluation enthalpy = Cp * (temperature - Tref) + enthalpyPres;
+            Evaluation enthalpy = Cp * (temperature - Tref) + onlyInternalEnergy * enthalpyPres;
 
-            return enthalpy - pressure/density;
+            return enthalpy - onlyInternalEnergy * (pressure/density);
         }
     }
 
@@ -391,7 +391,7 @@ public:
      const std::vector<Scalar>&  oilJTC() const
     { return oilJTC_; }
 
-    bool operator==(const OilPvtThermal<Scalar>& data) const
+    bool operator==(const OilPvtThermal<Scalar, onlyInternalEnergy>& data) const
     {
         if (isothermalPvt_ && !data.isothermalPvt_)
             return false;
@@ -414,7 +414,7 @@ public:
                 this->enableInternalEnergy() == data.enableInternalEnergy();
     }
 
-    OilPvtThermal<Scalar>& operator=(const OilPvtThermal<Scalar>& data)
+    OilPvtThermal<Scalar, onlyInternalEnergy>& operator=(const OilPvtThermal<Scalar, onlyInternalEnergy>& data)
     {
         if (data.isothermalPvt_)
             isothermalPvt_ = new IsothermalPvt(*data.isothermalPvt_);

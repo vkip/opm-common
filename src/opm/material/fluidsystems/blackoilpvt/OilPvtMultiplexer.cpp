@@ -44,6 +44,8 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
         setApproach(OilPvtApproach::BrineH2);
     else if (enableThermal && eclState.getSimulationConfig().isThermal())
         setApproach(OilPvtApproach::ThermalOil);
+    else if (enableThermal && eclState.getSimulationConfig().isTemperature())
+        setApproach(OilPvtApproach::TemperatureOil);
     else if (!eclState.getTableManager().getPvcdoTable().empty())
         setApproach(OilPvtApproach::ConstantCompressibilityOil);
     else if (eclState.getTableManager().hasTables("PVDO"))

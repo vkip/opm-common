@@ -36,8 +36,8 @@
 
 namespace Opm {
 
-template<class Scalar>
-void GasPvtThermal<Scalar>::
+template<class Scalar, bool onlyInternalEnergy>
+void GasPvtThermal<Scalar,onlyInternalEnergy>::
 initFromState(const EclipseState& eclState, const Schedule& schedule)
 {
     //////
@@ -191,7 +191,9 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
     }
 }
 
-template class GasPvtThermal<double>;
-template class GasPvtThermal<float>;
+template class GasPvtThermal<double,false>;
+template class GasPvtThermal<float,false>;
+template class GasPvtThermal<double,true>;
+template class GasPvtThermal<float,true>;
 
 } // namespace Opm

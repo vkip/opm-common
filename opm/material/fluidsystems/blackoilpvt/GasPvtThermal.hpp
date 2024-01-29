@@ -45,7 +45,7 @@ class GasPvtMultiplexer;
  * Note that this _only_ implements the temperature part, i.e., it requires the
  * isothermal properties as input.
  */
-template <class Scalar>
+template <class Scalar, bool onlyInternalEnergy = false >
 class GasPvtThermal
 {
 public:
@@ -180,7 +180,7 @@ public:
             Evaluation Rvw = 0.0;
 
             Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rv, Rvw);
-            constexpr const Scalar hVap = 480.6e3; // [J / kg]
+            constexpr const Scalar hVap = 480.6e3 * onlyInternalEnergy; // [J / kg]
             Evaluation Cp = (internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true) - hVap)/temperature;
             Evaluation density = invB * (gasReferenceDensity(regionIdx) + Rv * rhoRefO_[regionIdx]);
 
@@ -213,9 +213,9 @@ public:
                   throw std::runtime_error("Requested Joule-thomson calculation but thermal gas density (GASDENT) is not provided");
             }
 
-            Evaluation enthalpy = Cp * (temperature - Tref) + enthalpyPres;
+            Evaluation enthalpy = Cp * (temperature - Tref) + onlyInternalEnergy * enthalpyPres;
 
-            return enthalpy - pressure/density;
+            return enthalpy - onlyInternalEnergy * (pressure/density);
         }
     }
 
@@ -423,7 +423,7 @@ public:
     { return gasJTC_; }
 
 
-    bool operator==(const GasPvtThermal<Scalar>& data) const
+    bool operator==(const GasPvtThermal<Scalar, onlyInternalEnergy>& data) const
     {
         if (isothermalPvt_ && !data.isothermalPvt_)
             return false;
@@ -445,7 +445,7 @@ public:
                 this->enableInternalEnergy() == data.enableInternalEnergy();
     }
 
-    GasPvtThermal<Scalar>& operator=(const GasPvtThermal<Scalar>& data)
+    GasPvtThermal<Scalar, onlyInternalEnergy>& operator=(const GasPvtThermal<Scalar, onlyInternalEnergy>& data)
     {
         if (data.isothermalPvt_)
             isothermalPvt_ = new IsothermalPvt(*data.isothermalPvt_);

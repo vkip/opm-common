@@ -69,6 +69,11 @@ class Schedule;
         codeToCall;                                                       \
         break;                                                            \
     }                                                                     \
+    case GasPvtApproach::TemperatureGas: {                                \
+        auto& pvtImpl = getRealPvt<GasPvtApproach::TemperatureGas>();     \
+        codeToCall;                                                       \
+        break;                                                            \
+    }                                                                     \
     case GasPvtApproach::Co2Gas: {                                        \
         auto& pvtImpl = getRealPvt<GasPvtApproach::Co2Gas>();             \
         codeToCall;                                                       \
@@ -90,6 +95,7 @@ enum class GasPvtApproach {
     WetHumidGas,
     WetGas,
     ThermalGas,
+    TemperatureGas,
     Co2Gas,
     H2Gas
 };
@@ -104,7 +110,7 @@ enum class GasPvtApproach {
  * the API exposed by this class is pretty specific to the assumptions made by the black
  * oil model.
  */
-template <class Scalar, bool enableThermal = true>
+template <class Scalar, bool enableThermal = true >
 class GasPvtMultiplexer
 {
 public:
@@ -145,6 +151,10 @@ public:
         }
         case GasPvtApproach::ThermalGas: {
             delete &getRealPvt<GasPvtApproach::ThermalGas>();
+            break;
+        }
+        case GasPvtApproach::TemperatureGas: {
+            delete &getRealPvt<GasPvtApproach::TemperatureGas>();
             break;
         }
         case GasPvtApproach::Co2Gas: {
@@ -190,6 +200,10 @@ public:
 
         case GasPvtApproach::ThermalGas:
             realGasPvt_ = new GasPvtThermal<Scalar>;
+            break;
+
+        case GasPvtApproach::TemperatureGas:
+            realGasPvt_ = new GasPvtThermal<Scalar, /*onlyInternalEnergy*/ true>;
             break;
 
         case GasPvtApproach::Co2Gas:
@@ -423,6 +437,19 @@ public:
     }
 
     template <GasPvtApproach approachV>
+    typename std::enable_if<approachV == GasPvtApproach::TemperatureGas, GasPvtThermal<Scalar, /*onlyInternalEnergy*/ true> >::type& getRealPvt()
+    {
+        assert(gasPvtApproach() == approachV);
+        return *static_cast<GasPvtThermal<Scalar, /*onlyInternalEnergy*/ true>* >(realGasPvt_);
+    }
+    template <GasPvtApproach approachV>
+    typename std::enable_if<approachV == GasPvtApproach::TemperatureGas, const GasPvtThermal<Scalar, /*onlyInternalEnergy*/ true> >::type& getRealPvt() const
+    {
+        assert(gasPvtApproach() == approachV);
+        return *static_cast<const GasPvtThermal<Scalar, /*onlyInternalEnergy*/ true>* >(realGasPvt_);
+    }
+
+    template <GasPvtApproach approachV>
     typename std::enable_if<approachV == GasPvtApproach::Co2Gas, Co2GasPvt<Scalar> >::type& getRealPvt()
     {
         assert(gasPvtApproach() == approachV);
@@ -470,6 +497,9 @@ public:
             break;
         case GasPvtApproach::ThermalGas:
             realGasPvt_ = new GasPvtThermal<Scalar>(*static_cast<const GasPvtThermal<Scalar>*>(data.realGasPvt_));
+            break;
+        case GasPvtApproach::TemperatureGas:
+            realGasPvt_ = new GasPvtThermal<Scalar, /*onlyInternalEnergy*/ true>(*static_cast<const GasPvtThermal<Scalar, /*onlyInternalEnergy*/ true>*>(data.realGasPvt_));
             break;
         case GasPvtApproach::Co2Gas:
             realGasPvt_ = new Co2GasPvt<Scalar>(*static_cast<const Co2GasPvt<Scalar>*>(data.realGasPvt_));

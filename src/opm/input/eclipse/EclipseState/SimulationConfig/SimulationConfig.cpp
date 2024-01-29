@@ -54,6 +54,7 @@ namespace Opm {
         m_VAPOIL(false),
         m_VAPWAT(false),
         m_isThermal(false),
+        m_isTemperature(false),
         m_diffuse(false),
         m_PRECSALT(false)
     {
@@ -71,6 +72,7 @@ namespace Opm {
         m_VAPOIL(false),
         m_VAPWAT(false),
         m_isThermal(false),
+        m_isTemperature(false),
         m_diffuse(false),
         m_PRECSALT(false)
     {
@@ -98,8 +100,15 @@ namespace Opm {
             if (runspec.hasKeyword<ParserKeywords::DIFFUSE>()) {
                 m_diffuse = true;
             }
-            this->m_isThermal = runspec.hasKeyword<ParserKeywords::THERMAL>()
-                || runspec.hasKeyword<ParserKeywords::TEMP>();
+            if (runspec.hasKeyword<ParserKeywords::THERMAL>()) {
+                m_isThermal = true;
+            }
+            if (runspec.hasKeyword<ParserKeywords::TEMP>()) {
+                m_isTemperature = true;
+            }
+            if (m_isThermal && m_isTemperature) {
+                throw std::logic_error("Cannot have both TEMP and THERMAL in the same deck!");
+            }
             if (runspec.hasKeyword<ParserKeywords::PRECSALT>()) {
                 m_PRECSALT = true;
             }
@@ -162,6 +171,10 @@ namespace Opm {
 
     bool SimulationConfig::isThermal() const {
         return this->m_isThermal;
+    }
+
+    bool SimulationConfig::isTemperature() const {
+        return this->m_isTemperature;
     }
 
     bool SimulationConfig::isDiffusive() const {
