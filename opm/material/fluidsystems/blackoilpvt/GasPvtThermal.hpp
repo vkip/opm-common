@@ -180,7 +180,7 @@ public:
             Evaluation Rvw = 0.0;
 
             Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rv, Rvw);
-            constexpr const Scalar hVap = 480.6e3 * onlyInternalEnergy; // [J / kg]
+            constexpr const Scalar hVap = 480.6e3 * !onlyInternalEnergy; // [J / kg]
             Evaluation Cp = (internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true) - hVap)/temperature;
             Evaluation density = invB * (gasReferenceDensity(regionIdx) + Rv * rhoRefO_[regionIdx]);
 
@@ -213,9 +213,9 @@ public:
                   throw std::runtime_error("Requested Joule-thomson calculation but thermal gas density (GASDENT) is not provided");
             }
 
-            Evaluation enthalpy = Cp * (temperature - Tref) + onlyInternalEnergy * enthalpyPres;
+            Evaluation enthalpy = Cp * (temperature - Tref) + !onlyInternalEnergy * enthalpyPres;
 
-            return enthalpy - onlyInternalEnergy * (pressure/density);
+            return enthalpy - !onlyInternalEnergy * (pressure/density);
         }
     }
 

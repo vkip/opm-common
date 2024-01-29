@@ -219,9 +219,9 @@ public:
                   throw std::runtime_error("Requested Joule-thomson calculation but thermal water density (WATDENT) is not provided");
             }
 
-            Evaluation enthalpy = Cp * (temperature - Tref) + onlyInternalEnergy * enthalpyPres;
+            Evaluation enthalpy = Cp * (temperature - Tref) + !onlyInternalEnergy * enthalpyPres;
 
-            return enthalpy - onlyInternalEnergy * (pressure/density);
+            return enthalpy - !onlyInternalEnergy * (pressure/density);
         }
     }
 
