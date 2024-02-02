@@ -164,6 +164,14 @@ public:
     }
 
     /*!
+    * Inlucde work term in enthalpy
+    */
+    static bool includeWork()
+    {
+        return true;
+    }
+
+    /*!
      * \brief Initialize the fluid system's static parameters
      */
     static void init()

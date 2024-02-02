@@ -168,7 +168,7 @@ initFromState(const EclipseState& eclState, const Schedule& schedule)
             // methane. A proper model would also need to consider the enthalpy
             // change due to dissolution, i.e. the enthalpies of the gas and oil
             // phases should depend on the phase composition
-            const Scalar hVap = 480.6e3; // [J / kg]
+            const Scalar hVap = 480.6e3 * (!onlyInternalEnergy); // [J / kg]
 
             Scalar u = temperatureColumn[0]*cvGasColumn[0] + hVap;
             for (size_t i = 0;; ++i) {

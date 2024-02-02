@@ -1087,27 +1087,40 @@ public:
         case oilPhaseIdx:
             return
                 oilPvt_->internalEnergy(regionIdx, T, p, BlackOil::template getRs_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
-                + p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
+                + oilPvt_->includeWork() * p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
 
         case gasPhaseIdx:
             return
                  gasPvt_->internalEnergy(regionIdx, T, p,
                  BlackOil::template getRv_<ThisType, FluidState, LhsEval>(fluidState, regionIdx),
                   BlackOil::template getRvw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
-                  + p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
+                  + gasPvt_->includeWork() * p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
 
         case waterPhaseIdx:
             return
                 waterPvt_->internalEnergy(regionIdx, T, p,
                                           BlackOil::template getRsw_<ThisType, FluidState, LhsEval>(fluidState, regionIdx),
                                           BlackOil::template getSaltConcentration_<ThisType, FluidState, LhsEval>(fluidState, regionIdx))
-                + p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
+                + waterPvt_->includeWork() * p/density<FluidState, LhsEval>(fluidState, phaseIdx, regionIdx);
 
         default: throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
         }
 
         throw std::logic_error("Unhandled phase index "+std::to_string(phaseIdx));
     }
+
+    /*!
+    * Inlucde work term in enthalpy
+    */
+    static bool includeWork()
+    {
+        bool include_work = false;
+        if (oilPvt_) include_work = (include_work || oilPvt_->includeWork());
+        if (gasPvt_) include_work = (include_work || gasPvt_->includeWork());
+        if (waterPvt_) include_work = (include_work || waterPvt_->includeWork());
+        return include_work;
+    }
+
 
     /*!
      * \brief Returns the water vaporization factor \f$R_\alpha\f$ of saturated phase

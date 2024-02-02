@@ -79,8 +79,8 @@ class Schedule;
         codeToCall;                                                       \
         break;                                                            \
     }                                                                     \
-    case GasPvtApproach::H2Gas: {                                      \
-        auto& pvtImpl = getRealPvt<GasPvtApproach::H2Gas>();           \
+    case GasPvtApproach::H2Gas: {                                         \
+        auto& pvtImpl = getRealPvt<GasPvtApproach::H2Gas>();              \
         codeToCall;                                                       \
         break;                                                            \
     }                                                                     \
@@ -251,6 +251,16 @@ public:
                         const Evaluation& Rv,
                         const Evaluation& Rvw) const
     { OPM_GAS_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, Rv, Rvw)); return 0; }
+
+    /*!
+    * \brief Return true if the work term in enthalphy should be included
+    */
+    bool includeWork() const {
+        if (gasPvtApproach_ == GasPvtApproach::TemperatureGas)
+            return false;
+
+        return true;
+    }
 
     /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.

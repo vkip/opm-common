@@ -202,6 +202,17 @@ public:
     { OPM_OIL_PVT_MULTIPLEXER_CALL(return pvtImpl.internalEnergy(regionIdx, temperature, pressure, Rs)); return 0; }
 
     /*!
+    * \brief Return true if the work term in enthalphy should be included
+    */
+    bool includeWork() const {
+        if (approach_ == OilPvtApproach::TemperatureOil)
+            return false;
+
+        return true;
+    }
+
+
+    /*!
      * \brief Returns the dynamic viscosity [Pa s] of the fluid phase given a set of parameters.
      */
     template <class Evaluation>

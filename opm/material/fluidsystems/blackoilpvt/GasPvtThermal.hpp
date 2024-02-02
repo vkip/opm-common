@@ -51,6 +51,7 @@ class GasPvtThermal
 public:
     using IsothermalPvt = GasPvtMultiplexer<Scalar, /*enableThermal=*/false>;
     using TabulatedOneDFunction = Tabulated1DFunction<Scalar>;
+    static constexpr bool includeWork = !onlyInternalEnergy;
 
     GasPvtThermal()
     {
@@ -180,7 +181,7 @@ public:
             Evaluation Rvw = 0.0;
 
             Evaluation invB = inverseFormationVolumeFactor(regionIdx, temperature, pressure, Rv, Rvw);
-            constexpr const Scalar hVap = 480.6e3 * !onlyInternalEnergy; // [J / kg]
+            constexpr const Scalar hVap = 480.6e3 * (!onlyInternalEnergy); // [J / kg]
             Evaluation Cp = (internalEnergyCurves_[regionIdx].eval(temperature, /*extrapolate=*/true) - hVap)/temperature;
             Evaluation density = invB * (gasReferenceDensity(regionIdx) + Rv * rhoRefO_[regionIdx]);
 
