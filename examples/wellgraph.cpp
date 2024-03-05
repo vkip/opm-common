@@ -100,7 +100,8 @@ inline Opm::Schedule loadSchedule(const std::string& deck_file)
     Opm::ParseContext parseContext({{Opm::ParseContext::PARSE_RANDOM_SLASH, Opm::InputErrorAction::IGNORE},
                                     {Opm::ParseContext::PARSE_MISSING_DIMS_KEYWORD, Opm::InputErrorAction::WARN},
                                     {Opm::ParseContext::SUMMARY_UNKNOWN_WELL, Opm::InputErrorAction::WARN},
-                                    {Opm::ParseContext::SUMMARY_UNKNOWN_GROUP, Opm::InputErrorAction::WARN}});
+                                    {Opm::ParseContext::SUMMARY_UNKNOWN_GROUP, Opm::InputErrorAction::WARN},
+                                    {Opm::ParseContext::SCHEDULE_INVALID_NAME, Opm::InputErrorAction::WARN}});
     Opm::ErrorGuard errors;
     Opm::Parser parser;
     auto python = std::make_shared<Opm::Python>();
@@ -114,7 +115,7 @@ inline Opm::Schedule loadSchedule(const std::string& deck_file)
     std::cout << "complete.\n";
 
     std::cout << "Creating Schedule .... ";  std::cout.flush();
-    Opm::Schedule schedule( deck, state, python);
+    Opm::Schedule schedule( deck, state, parseContext, errors, python);
     std::cout << "complete." << std::endl;
 
     return schedule;
