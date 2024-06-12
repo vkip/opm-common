@@ -25,7 +25,6 @@
 
 #include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 namespace Opm {
@@ -212,6 +211,7 @@ void ExtNetwork::update_node(Node node)
     this->m_nodes.insert_or_assign(name, std::move(node) );
 }
 
+// @TODO@ : Make this ACTION safe
 bool ExtNetwork::needs_instantaneous_rates(const Opm::Schedule& schedule, const int report_step) const {
     // Just return value if we already checked this report step
     if (report_step == this->m_previous_update_report_step) {
@@ -223,14 +223,14 @@ bool ExtNetwork::needs_instantaneous_rates(const Opm::Schedule& schedule, const 
         if (!schedule.hasGroup(node_name, report_step))
             continue;
         const auto& group = schedule.getGroup(node_name, report_step);
-        if (!group.useEfficiencyInExtNetwork()) {
+        if (!group.useEfficiencyInNetwork()) {
             this->m_needs_instantaneous_rates = true;
             this->m_previous_update_report_step = report_step;
             return true;
         }
         for (const std::string& well_name : group.wells()) {
-            const Opm::Well& well = schedule.getWell(well_name, report_step);
-            if(!well.useEfficiencyInExtNetwork()) {
+            const auto& well = schedule.getWell(well_name, report_step);
+            if(!well.useEfficiencyInNetwork()) {
                 this->m_needs_instantaneous_rates = true;
                 this->m_previous_update_report_step = report_step;
                 return true;

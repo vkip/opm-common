@@ -31,8 +31,6 @@
 #include <opm/input/eclipse/Schedule/Network/Node.hpp>
 
 namespace Opm {
-    class Group;
-    class Well;
     class Schedule;
 
 namespace Network {
