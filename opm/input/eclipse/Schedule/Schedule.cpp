@@ -1205,6 +1205,21 @@ void Schedule::iterateScheduleSection(std::size_t load_start, std::size_t load_e
         return wells;
     }
 
+    std::vector<Well> Schedule::getInactiveWellsAtEnd() const {
+        std::vector<Well> inactive_wells;
+        const auto lastStep = this->snapshots.size() - 1;
+        const auto& well_order = this->snapshots[lastStep].well_order();
+
+        for (const auto& wname : well_order) {
+            const auto well = this->snapshots[lastStep].wells.get(wname);
+            if (well.hasProduced() || well.hasInjected() || name_match_any(this->potential_wellopen_patterns, wname))
+                continue;
+            inactive_wells.push_back(well);
+        }
+
+        return inactive_wells;
+    }
+
     std::vector<std::string> Schedule::getInactiveWellNamesAtEnd() const {
         std::vector<std::string> well_names;
         const auto lastStep = this->snapshots.size() - 1;

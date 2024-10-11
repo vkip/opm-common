@@ -233,6 +233,7 @@ namespace Opm
         std::vector<Well> getWells(std::size_t timeStep) const;
         std::vector<Well> getWellsatEnd() const;
         std::vector<Well> getActiveWellsAtEnd() const; // Get wells that have been active any time during simulation
+        std::vector<Well> getInactiveWellsAtEnd() const; // Get wells that have been active any time during simulation
         std::vector<std::string> getInactiveWellNamesAtEnd() const; // Get well names of wells that have never been active
 
         const std::unordered_map<std::string, std::set<int>>& getPossibleFutureConnections() const;
