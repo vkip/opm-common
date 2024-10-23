@@ -66,7 +66,7 @@ std::size_t ScheduleDeck::restart_offset() const {
 
 
 ScheduleDeck::ScheduleDeck(time_point start_time, const Deck& deck, const ScheduleRestartInfo& rst_info) {
-    const std::unordered_set<std::string> skiprest_include = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
+    const std::unordered_set<std::string> skiprest_include = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES", "GCONSUMP"};
 
     this->m_restart_time = TimeService::from_time_t(rst_info.time);
     this->m_restart_offset = rst_info.report_step;
