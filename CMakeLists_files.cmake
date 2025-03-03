@@ -811,6 +811,7 @@ if(ENABLE_ECL_INPUT)
     examples/opmpack.cpp
     examples/opmhash.cpp
     examples/rst_deck.cpp
+    examples/rst_deck_insertfile.cpp
     examples/wellgraph.cpp
     examples/make_ext_smry.cpp
     examples/co2brinepvt.cpp
@@ -828,6 +829,7 @@ if(ENABLE_ECL_INPUT)
     examples/opmpack.cpp
     examples/opmhash.cpp
     examples/rst_deck.cpp
+    examples/rst_deck_insertfile.cpp
     examples/make_esmry.cpp
     examples/co2brinepvt.cpp
     examples/hysteresis.cpp
