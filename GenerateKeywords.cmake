@@ -3,6 +3,7 @@ set(genkw_SOURCES opm/json/JsonObject.cpp
                   opm/input/eclipse/Deck/DeckValue.cpp
                   opm/input/eclipse/Deck/Deck.cpp
                   opm/input/eclipse/Deck/DeckView.cpp
+                  opm/input/eclipse/Deck/DeckViewMutable.cpp
                   opm/input/eclipse/Deck/DeckItem.cpp
                   opm/input/eclipse/Deck/DeckKeyword.cpp
                   opm/input/eclipse/Deck/DeckRecord.cpp

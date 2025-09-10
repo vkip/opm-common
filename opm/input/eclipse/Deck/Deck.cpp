@@ -68,6 +68,13 @@ const DeckView& Deck::global_view() const {
         return this->keywordList.at(index);
     }
 
+    Opm::DeckViewMutable Deck::getMutable(const std::string& keyword) {
+        DeckViewMutable mutable_view;
+        for (auto& kw : this->keywordList)
+            if (kw.name() == keyword)
+                mutable_view.add_keyword(kw);
+        return mutable_view;
+    }
 
     Deck::Deck( const Deck& d )
         : keywordList( d.keywordList )

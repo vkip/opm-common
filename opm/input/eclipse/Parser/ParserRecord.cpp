@@ -106,6 +106,11 @@ namespace {
         return this->m_items.at( index );
     }
 
+    ParserItem& ParserRecord::get(size_t index) {
+        return this->m_items.at( index );
+    }
+
+
     bool ParserRecord::hasItem( const std::string& name ) const {
         return std::any_of( this->m_items.begin(),
                             this->m_items.end(),
@@ -122,6 +127,18 @@ namespace {
 
         return *itr;
     }
+
+    ParserItem& ParserRecord::get( const std::string& name ) {
+        auto itr = std::find_if( this->m_items.begin(),
+                                 this->m_items.end(),
+                                 name_eq( name ) );
+
+        if( itr == this->m_items.end() )
+            throw std::out_of_range( "No item '" + name + "'" );
+
+        return *itr;
+    }
+
 
     DeckRecord ParserRecord::parse(const ParseContext& parseContext ,
                                    ErrorGuard& errors ,

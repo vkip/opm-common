@@ -21,6 +21,7 @@
 #define DECK_HPP
 
 #include <opm/input/eclipse/Deck/DeckView.hpp>
+#include <opm/input/eclipse/Deck/DeckViewMutable.hpp>
 #include <opm/input/eclipse/Deck/DeckTree.hpp>
 #include <opm/input/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -89,6 +90,8 @@ namespace Opm {
             Opm::DeckView get() const {
                 return this->operator[](Keyword::keywordName);
             }
+
+            Opm::DeckViewMutable getMutable(const std::string& keyword);
 
             std::vector< const DeckKeyword* > getKeywordList( const std::string& keyword ) const;
             template< class Keyword >

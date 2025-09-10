@@ -109,6 +109,7 @@ if(ENABLE_ECL_INPUT)
     opm/json/JsonObject.cpp
     opm/input/eclipse/Deck/Deck.cpp
     opm/input/eclipse/Deck/DeckView.cpp
+    opm/input/eclipse/Deck/DeckViewMutable.cpp
     opm/input/eclipse/Deck/DeckTree.cpp
     opm/input/eclipse/Deck/FileDeck.cpp
     opm/input/eclipse/Deck/DeckItem.cpp
@@ -1500,6 +1501,7 @@ if(ENABLE_ECL_INPUT)
        opm/input/eclipse/Deck/DeckItem.hpp
        opm/input/eclipse/Deck/Deck.hpp
        opm/input/eclipse/Deck/DeckView.hpp
+       opm/input/eclipse/Deck/DeckViewMutable.hpp
        opm/input/eclipse/Deck/FileDeck.hpp
        opm/input/eclipse/Deck/DeckSection.hpp
        opm/input/eclipse/Deck/DeckTree.hpp

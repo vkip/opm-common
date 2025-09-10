@@ -44,6 +44,8 @@ namespace Opm {
         void addDataItem( ParserItem item );
         const ParserItem& get(size_t index) const;
         const ParserItem& get(const std::string& itemName) const;
+        ParserItem& get(size_t index);
+        ParserItem& get(const std::string& itemName);
         DeckRecord parse( const ParseContext&, ErrorGuard&, RawRecord&, UnitSystem& active_unitsystem, UnitSystem& default_unitsystem, const KeywordLocation& location) const;
         bool isDataRecord() const;
         bool equal(const ParserRecord& other) const;
