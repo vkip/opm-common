@@ -86,6 +86,7 @@ public:
     void erase(const Index& index);
     void erase(const Index& begin, const Index& end);
     void insert(const Index& index, const DeckKeyword& keyword);
+    void append(const DeckKeyword& keyword);
 
     void dump_stdout(const std::string& output_dir, OutputMode mode) const;
     void dump(const std::string& dir, const std::string& fname, OutputMode mode) const;
@@ -112,6 +113,7 @@ private:
         bool empty() const;
         void erase(const FileDeck::Index& index);
         void insert(std::size_t keyword_index, const DeckKeyword& keyword);
+        void append(const DeckKeyword& keyword);
         void dump(DeckOutput& out) const;
 
     private:

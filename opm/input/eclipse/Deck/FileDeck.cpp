@@ -253,6 +253,9 @@ void FileDeck::erase(const FileDeck::Index& index)
     auto& block = this->blocks.at(index.file_index);
     this->modified_files.insert(block.fname);
     block.erase(index);
+    if (block.empty() && (this->blocks.size() > 1)) {
+        this->blocks.erase(this->blocks.begin() + index.file_index);
+    }
 }
 
 void FileDeck::erase(const Index& begin, const Index& end)
@@ -282,6 +285,11 @@ void FileDeck::Block::insert(const std::size_t keyword_index,
                              const DeckKeyword& keyword)
 {
     this->keywords.insert(this->keywords.begin() + keyword_index, keyword);
+}
+
+void FileDeck::Block::append(const DeckKeyword& keyword)
+{
+    this->keywords.push_back(keyword);
 }
 
 void FileDeck::Block::dump(DeckOutput& out) const
@@ -343,6 +351,14 @@ void FileDeck::insert(const Index& index, const DeckKeyword& keyword)
 {
     auto& block = this->blocks.at(index.file_index);
     block.insert(index.keyword_index, keyword);
+
+    this->modified_files.insert(block.fname);
+}
+
+void FileDeck::append(const DeckKeyword& keyword)
+{
+    auto& block = this->blocks.back();
+    block.append(keyword);
 
     this->modified_files.insert(block.fname);
 }
