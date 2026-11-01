@@ -1359,6 +1359,7 @@ namespace {
                 : (conn.dir() == Connection::Direction::Y) ? 1 : 2;
             std::vector<Placed> placed;
             placeInBox(lgrs, *top, { conn.getI(), conn.getJ(), conn.getK() }, axis, 1.0, 1.0, placed);
+            double alongDone = 0.0;
             for (const auto& pl : placed) {
                 auto props = conn.ctfProperties();
                 const double r0Old = props.r0;
@@ -1393,6 +1394,20 @@ namespace {
                                      conn.satTableId(), conn.depth(), props,
                                      conn.sort_value(), conn.getDefaultSatTabId(),
                                      gridNumberOf(pl.lgr));
+                // A multi-segment well's connection keeps its segment, each
+                // child taking its share of the perforated interval.
+                if (conn.attachedToSegment()) {
+                    auto range = conn.perf_range();
+                    if (range.has_value()) {
+                        const double length = range->second - range->first;
+                        range = std::pair { range->first + alongDone * length,
+                                            range->first + (alongDone + pl.fracAlong) * length };
+                    }
+                    refined.back().updateSegment(conn.segment(), conn.depth(),
+                                                 conn.thermalLength() * pl.fracAlong,
+                                                 conn.sort_value(), range);
+                }
+                alongDone += pl.fracAlong;
                 lgrNames.insert(pl.lgr);
                 changed = true;
             }
