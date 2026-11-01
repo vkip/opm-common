@@ -774,7 +774,11 @@ namespace {
                 const auto& segment0   = welSegSet[0];
 
                 const auto& conn0 = well.getConnections();
-                const auto& welConns = Opm::WellConnections(conn0, grid);
+                // Active connections in every grid: those in LGRs refer to their own grid's cells.
+                auto welConns = Opm::WellConnections(conn0.ordering(), conn0.getHeadI(), conn0.getHeadJ());
+                for (const auto idx : conn0.outputAllGrids(grid)) {
+                    welConns.add(conn0[idx]);
+                }
                 const auto& wname     = well.name();
                 const auto& wRatesIt =  wr.find(wname);
                 //

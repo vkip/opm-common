@@ -621,18 +621,10 @@ namespace {
                     || lwell.hasConnectionsInLgr(lgr_number);
             });
 
-        // Write well and MSW data only when applicable (i.e., when present)
+        // Write well data only when applicable. The segments of a multi-segment
+        // well in an LGR are in the global section; the LGR section holds the
+        // well and its connections.
         if (!wells.empty() && has_lgrwells) {
-            const auto haveMSW = std::ranges::any_of
-                (wells, [&schedule, sim_step](const std::string& well) {
-                    const auto& lwell = schedule.getWell(well, sim_step);
-                    return lwell.isMultiSegment() && lwell.is_lgr_well();
-                });
-
-            if (haveMSW) {
-                throw std::logic_error("MSW not supported for LGR");
-            }
-
             writeWellLGR(sim_step,
                          grid,
                          schedule,
