@@ -543,10 +543,50 @@ void FileDeck::dump(const std::string& output_dir,
         }
     }
 
+    if (mode == OutputMode::COPY_MODIFIED) {
+        DumpContext context;
+        this->dump_block(this->blocks[0], output_dir, fname, context);
+
+        for (std::size_t block_index = 1; block_index < this->blocks.size(); ++block_index) {
+            const auto& block = this->blocks[block_index];
+            if (this->is_written_copy_modified(block)) {
+                const auto& include_file = this->dump_block(block, output_dir, {}, context);
+                if (!include_file.empty() && (block.fname != this->deck_tree.root())) {
+                    this->include_block(block.fname, include_file, output_dir, context);
+                }
+            }
+            else {
+                // Included from where it is, as many times as the input includes it
+                this->include_block(block.fname, fs::absolute(block.fname).generic_string(), output_dir, context);
+            }
+        }
+    }
+
     if (mode == OutputMode::SHARE) {
        std::ofstream stream{output_cwd / fname};
        this->dump_shared(stream, output_dir);
     }
+}
+
+bool FileDeck::is_written_copy_modified(const Block& block) const
+{
+    return (block.fname == this->deck_tree.root())
+        || (this->modified_files.count(block.fname) > 0)
+        || block.is_binary
+        || this->deck_tree.has_include(block.fname);
+}
+
+std::vector<std::string> FileDeck::files_written_copy_modified() const
+{
+    std::vector<std::string> files;
+    for (const auto& block : this->blocks) {
+        if (this->is_written_copy_modified(block)
+            && (std::find(files.begin(), files.end(), block.fname) == files.end()))
+        {
+            files.push_back(block.fname);
+        }
+    }
+    return files;
 }
 
 void FileDeck::dump_shared(std::ostream& stream,

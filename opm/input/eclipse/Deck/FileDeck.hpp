@@ -48,6 +48,10 @@ public:
         INLINE = 1,
         SHARE = 2,
         COPY = 3,
+        // As COPY, but only the files that must be written are: the main file, the modified files, binary
+        // files (as GRDECL) and the files that include others. The other files are included from where
+        // they are, by their path relative to the output directory.
+        COPY_MODIFIED = 4,
     };
 
     struct Index
@@ -89,6 +93,8 @@ public:
 
     void dump_stdout(const std::string& output_dir, OutputMode mode) const;
     void dump(const std::string& dir, const std::string& fname, OutputMode mode) const;
+    // The input files that dump() writes in OutputMode::COPY_MODIFIED
+    std::vector<std::string> files_written_copy_modified() const;
     const DeckKeyword& operator[](const Index& index) const;
     Index start() const;
     Index stop() const;
@@ -143,6 +149,7 @@ private:
 
     void dump(std::ostream& os) const;
     void dump_shared(std::ostream& stream, const std::string& output_dir) const;
+    bool is_written_copy_modified(const Block& block) const;
     void dump_inline() const;
 
     std::string dump_block(const Block& block,
