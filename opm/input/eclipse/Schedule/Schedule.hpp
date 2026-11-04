@@ -344,7 +344,12 @@ namespace Opm {
         /// Move COMPDAT connections that lie inside a refinement box into the
         /// innermost LGR covering them (WellConnections::refineIntoLgrs), tagging
         /// the well.
-        void refineConnectionsIntoLgrs(const LgrCollection& lgrs);
+        ///
+        /// \param[in] firstStep First report step to refine. An action
+        ///   rebuilds the report steps from the one it triggers in, so those
+        ///   need refining again.
+        void refineConnectionsIntoLgrs(const LgrCollection& lgrs,
+                                       std::size_t firstStep = 0);
 
         // Get wells that have been active any time during simulation
         std::vector<Well> getActiveWellsAtEnd() const;

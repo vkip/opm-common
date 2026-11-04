@@ -1376,7 +1376,8 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
         return this->getWells(this->snapshots.size() - 1);
     }
 
-    void Schedule::refineConnectionsIntoLgrs(const LgrCollection& lgrs)
+    void Schedule::refineConnectionsIntoLgrs(const LgrCollection& lgrs,
+                                             const std::size_t firstStep)
     {
         if (lgrs.size() == 0) {
             return;
@@ -1389,8 +1390,30 @@ Defaulted grid coordinates is not allowed for COMPDAT as part of ACTIONX)"
             }
             throw std::logic_error("Unknown LGR " + name);
         };
-        for (auto& snapshot : this->snapshots) {
+        const auto inUnrefinedBox = [&lgrs](const Connection& c)
+        {
+            if (c.get_lgr_level() != 0) {
+                return false;
+            }
+            for (std::size_t i = 0; i < lgrs.size(); ++i) {
+                const auto& box = lgrs.getLgr(i);
+                if ((box.PARENT_NAME() == "GLOBAL")
+                    && (c.getI() >= box.I1()) && (c.getI() <= box.I2())
+                    && (c.getJ() >= box.J1()) && (c.getJ() <= box.J2())
+                    && (c.getK() >= box.K1()) && (c.getK() <= box.K2()))
+                {
+                    return true;
+                }
+            }
+            return false;
+        };
+        for (std::size_t step = firstStep; step < this->snapshots.size(); ++step) {
+            auto& snapshot = this->snapshots[step];
             for (const auto& wname : snapshot.wells.keys()) {
+                const auto& current = snapshot.wells.get(wname).getConnections();
+                if (std::none_of(current.begin(), current.end(), inUnrefinedBox)) {
+                    continue;
+                }
                 auto well = snapshot.wells.get(wname);
                 auto conns = std::make_shared<WellConnections>(well.getConnections());
                 std::set<std::string> lgrNames;

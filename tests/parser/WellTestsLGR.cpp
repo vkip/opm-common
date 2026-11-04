@@ -35,6 +35,9 @@
 #include <opm/input/eclipse/EclipseState/Runspec.hpp>
 
 #define private public
+#include <opm/input/eclipse/Schedule/Action/ActionResult.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
+#include <opm/input/eclipse/Schedule/Action/ActionX.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #undef private
 
@@ -506,6 +509,97 @@ COMPDAT
     BOOST_CHECK(refined > 0);
     BOOST_CHECK_EQUAL(well.getConnections().outputAllGrids(es.getInputGrid()).size(),
                       global + refined);
+}
+
+// An action rebuilds the report steps after the one it triggers in from the
+// deck, which puts the connections inside a box back into the cell it refines
+// until they are refined again from that step on.
+BOOST_AUTO_TEST_CASE(ConnectionsInABoxAfterAnAction)
+{
+    const auto deck = Opm::Parser{}.parseString(R"(
+RUNSPEC
+DIMENS
+ 3 3 3 /
+OIL
+WATER
+START
+ 1 'JAN' 2020 /
+GRID
+CARFIN
+ 'LGR1' 2 2 2 2 2 2 3 3 3 /
+ENDFIN
+DX
+ 27*100 /
+DY
+ 27*100 /
+DZ
+ 27*10 /
+BOX
+ 1 3 1 3 1 1 /
+TOPS
+ 9*1000 /
+ENDBOX
+PORO
+ 27*0.2 /
+PERMX
+ 27*100 /
+PERMY
+ 27*100 /
+PERMZ
+ 27*10 /
+SCHEDULE
+WELSPECS
+ 'P1' 'G' 1 1 1* 'OIL' /
+/
+COMPDAT
+ 'P1' 1 1 1 1 'OPEN' /
+/
+ACTIONX
+ 'A' 1 /
+ WOPR 'P1' > -1 /
+/
+WELOPEN
+ 'P1' 'OPEN' /
+/
+ENDACTIO
+TSTEP
+ 10 /
+WELSPECS
+ 'P2' 'G' 2 2 1* 'OIL' /
+/
+COMPDAT
+ 'P2' 2 2 2 2 'OPEN' /
+/
+TSTEP
+ 10 /
+)");
+    const auto es = Opm::EclipseState { deck };
+    auto sched = Opm::Schedule { deck, es };
+    sched.refineConnectionsIntoLgrs(es.getLgrs());
+
+    const auto levels = [&sched](const std::size_t step)
+    {
+        std::vector<int> lgr;
+        for (const auto& conn : sched.getWell("P2", step).getConnections()) {
+            lgr.push_back(conn.get_lgr_level());
+        }
+        return lgr;
+    };
+    const auto refined = levels(1);
+    BOOST_REQUIRE(!refined.empty());
+    BOOST_CHECK(std::ranges::all_of(refined, [](const int l) { return l == 1; }));
+
+    const auto& action = sched[0].actions()["A"];
+    const auto result = Opm::Action::Result { true };
+    sched.applyAction(0, action, result.matches(), std::unordered_map<std::string, double>{}, true);
+    BOOST_CHECK(levels(1) == std::vector<int>{0});
+
+    sched.refineConnectionsIntoLgrs(es.getLgrs(), 0);
+    BOOST_CHECK(levels(1) == refined);
+
+    // Connections already in the LGR are left as they are.
+    sched.refineConnectionsIntoLgrs(es.getLgrs(), 0);
+    BOOST_CHECK(levels(1) == refined);
 }
 
 // A connection's grid number counts nested LGRs as well, so its grid must be found by name.
