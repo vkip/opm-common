@@ -621,18 +621,10 @@ namespace {
                     || lwell.hasConnectionsInLgr(lgr_number);
             });
 
-        // Write well and MSW data only when applicable (i.e., when present)
+        // Write well data only when applicable. The segments of a multi-segment
+        // well in an LGR are in the global section; the LGR section holds the
+        // well and its connections.
         if (!wells.empty() && has_lgrwells) {
-            const auto haveMSW = std::ranges::any_of
-                (wells, [&schedule, sim_step](const std::string& well) {
-                    const auto& lwell = schedule.getWell(well, sim_step);
-                    return lwell.isMultiSegment() && lwell.is_lgr_well();
-                });
-
-            if (haveMSW) {
-                throw std::logic_error("MSW not supported for LGR");
-            }
-
             writeWellLGR(sim_step,
                          grid,
                          schedule,
@@ -939,6 +931,10 @@ namespace {
             writeSolutionExtra(value, schedule, udq_state, report_step, sim_step,
                 ecl_compatible_rst, inteHD, norst_value, rstFile,
                 writeDorF, writeInt, writeDouble);
+        }
+        else if ((norst_value == 0) && !ecl_compatible_rst) {
+            // UDQ and extra vectors are global; extended cell vectors (e.g. mechanics) are per grid.
+            writeExtendedSolutionVectors(value, writeDorF, writeInt);
         }
     }
 

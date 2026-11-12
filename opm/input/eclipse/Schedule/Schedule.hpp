@@ -344,7 +344,12 @@ namespace Opm {
         /// Move COMPDAT connections that lie inside a refinement box into the
         /// innermost LGR covering them (WellConnections::refineIntoLgrs), tagging
         /// the well.
-        void refineConnectionsIntoLgrs(const LgrCollection& lgrs);
+        ///
+        /// \param[in] firstStep First report step to refine. An action
+        ///   rebuilds the report steps from the one it triggers in, so those
+        ///   need refining again.
+        void refineConnectionsIntoLgrs(const LgrCollection& lgrs,
+                                       std::size_t firstStep = 0);
 
         // Get wells that have been active any time during simulation
         std::vector<Well> getActiveWellsAtEnd() const;
@@ -458,6 +463,24 @@ namespace Opm {
         static bool cmp(const Schedule& sched1, const Schedule& sched2, std::size_t report_step);
         void applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi, bool action_mode, std::size_t report_step);
         void applyKeywords(std::vector<std::unique_ptr<DeckKeyword>>& keywords, std::unordered_map<std::string, double>& target_wellpi, bool action_mode);
+
+        /// Insert keywords at several report steps and rebuild the schedule
+        /// once.
+        ///
+        /// The keywords of every step but the earliest go ahead of that
+        /// step's own keywords; those of the earliest are applied after its
+        /// own, as applyKeywords() applies them. The schedule is then rebuilt
+        /// from the earliest step on, a single time. Calling applyKeywords()
+        /// step by step instead rebuilds the rest of the schedule after every
+        /// call, and each of those rebuilds sees only the keywords inserted so
+        /// far, so a later keyword that refers to something inserted at a
+        /// later step fails in all but the last.
+        ///
+        /// \p parseContext and \p errors are the caller's, so that the
+        /// rebuild is held to the same input checks as the original run.
+        void insertKeywords(const std::map<std::size_t, std::vector<DeckKeyword>>& keywordsByStep,
+                            const ParseContext& parseContext,
+                            ErrorGuard& errors);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
